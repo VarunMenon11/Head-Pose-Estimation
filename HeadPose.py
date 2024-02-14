@@ -2,6 +2,8 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import time
+from scipy.spatial.transform import Rotation
+
 
 #Taking Face_mesh from the Mediapipe...used for detecting the face
 face_mesh = mp.solutions.face_mesh
@@ -19,14 +21,14 @@ while cap.isOpened():
     start = time.time()
 
     #Converting the Color Space from BGR to RGB
-    #image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
+    image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
     image.flags.writeable = False
 
     result = facemesh.process(image)
     
     image.flags.writeable = True
 
-    #image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_RGB2BGR)
+    image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_RGB2BGR)
 
     img_h, img_w, img_c = image.shape #Height, Width and No of channels(different color channels)
     face_3d = [] #for 3D reference pose
@@ -35,8 +37,8 @@ while cap.isOpened():
     if result.multi_face_landmarks: #Multiple face Landmarks
         for face_landmarks in result.multi_face_landmarks:
             for idx, lm in enumerate(face_landmarks.landmark): #landmark:- nose, ears, eyes, mouth
-                if idx == 33 or idx == 263 or idx == 1 or idx == 61 or idx == 291 or idx == 199: #index of faces
-                    if idx == 1:
+                if idx == 33 or idx == 263 or idx == 1 or idx == 61 or idx == 291 or idx == 199 or idx == 13 or idx == 14: #index of faces
+                    if idx == 1: 
                         nose_2d = (lm.x* img_w, lm.y * img_h)
                         nose_3d = (lm.x*img_w, lm.y * img_h, lm.z * 3000)
                     
@@ -53,7 +55,6 @@ while cap.isOpened():
 
             #Camera Calibration for obtaining intrinsic and distortion parameters
             focal_length = 1*img_w
-
             cam_matrix = np.array([[focal_length, 0, img_h/2],
                                    [0, focal_length, img_w/2],
                                    [0,0,1]])
@@ -66,17 +67,18 @@ while cap.isOpened():
 
             rmat, jac = cv2.Rodrigues(rot_vec)
 
-            #Angels
-            angels, mtxR, mtxQ, Qx, Qy, Qz = cv2.RQDecomp3x3(rmat)
+            # Angels
+            rotation = Rotation.from_matrix(rmat)
+            angles = rotation.as_euler('xyz', degrees=True)
 
-            x = angels[0] * 360
-            y = angels[1] * 360
-            z = angels[2] * 360
+            x = angles[0] * 360
+            y = angles[1] * 360
+            z = angles[2] * 360
 
             if y < -10:
-                text = "Looking Right"
+                text = "Looking left"
             elif y > 10:
-                text = "Looking Left"
+                text = "Looking Right"
             elif x < -10:
                 text = "Looking Down"
             elif x > 10:
@@ -95,7 +97,7 @@ while cap.isOpened():
             cv2.putText(image, text, (20,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
             cv2.putText(image, "x:" + str(np.round(y,2)), (400,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
             cv2.putText(image, "y:" + str(np.round(x,2)), (400,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-            #cv2.putText(image, "z:" + str(np.round(z,2)), (400,150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+            cv2.putText(image, "z:" + str(np.round(z,2)), (400,150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
         
         end = time.time()
         Totaltime = end-start
