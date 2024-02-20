@@ -28,7 +28,7 @@ while cap.isOpened():
     
     image.flags.writeable = True
 
-    image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_RGB2BGR)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
     img_h, img_w, img_c = image.shape #Height, Width and No of channels(different color channels)
     face_3d = [] #for 3D reference pose
@@ -87,12 +87,12 @@ while cap.isOpened():
                 text = "Foward"
             
             #Display
-            #nose_3d_projection, jacobian = cv2.projectPoints(nose_3d, rot_vec, trans_vec, cam_matrix, dist_matrix)
+            nose_3d_projection, jacobian = cv2.projectPoints(nose_3d, rot_vec, trans_vec, cam_matrix, dist_matrix)
 
-            #p1 = (int(nose_2d[0]), int(nose_2d[1])) #Tip of the nose
-            #p2 = (int(nose_2d[0] + y * 10), int(nose_2d[1] + y * 10))
+            p1 = (int(nose_2d[0]), int(nose_2d[1])) #Tip of the nose
+            p2 = (int(nose_2d[0] + y * 10), int(nose_2d[1] - x * 10))
 
-            #cv2.line(image, p1, p2, (255, 0 , 0), 3)
+            cv2.line(image, p1, p2, (255, 0 , 0), 3)
 
             cv2.putText(image, text, (20,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
             cv2.putText(image, "x:" + str(np.round(y,2)), (400,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
@@ -107,13 +107,13 @@ while cap.isOpened():
 
         #cv2.putText(image, f"FPS: {int(fps)}", (20, 450), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,255,0), 2)
 
-        #mp_drawing.draw_landmarks(
-        #       image = image,
-        #        landmark_list = face_landmarks,
-        #        #connections = face_mesh.POSE_CONNECTIONS,
-        #        landmark_drawing_spec = drawing_spec,
-        #        connection_drawing_spec = drawing_spec
-        #)
+        mp_drawing.draw_landmarks(
+               image = image,
+                landmark_list = face_landmarks,
+                #connections = face_mesh.FACE_CONNECTIONS,
+                landmark_drawing_spec = drawing_spec,
+                connection_drawing_spec = drawing_spec
+        )
 
     
     cv2.imshow("Head Pose Estimation", image)
@@ -124,7 +124,6 @@ while cap.isOpened():
 cap.release()
 
             
-
 
 
 
