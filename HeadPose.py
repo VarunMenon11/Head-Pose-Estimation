@@ -16,10 +16,12 @@ drawing_spec = mp_drawing.DrawingSpec(thickness =  1, circle_radius = 1)
 #To Open our webcam
 cap = cv2.VideoCapture(0)
 
+cv2.namedWindow('Head Pose Estimation', cv2.WINDOW_NORMAL)
+cv2.resizeWindow('Head Pose Estimation', 1200, 800)
 while cap.isOpened():
     success, image = cap.read()
     start = time.time()
-
+    
     #Converting the Color Space from BGR to RGB
     image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
     image.flags.writeable = False
@@ -41,6 +43,7 @@ while cap.isOpened():
                     if idx == 1: 
                         nose_2d = (lm.x* img_w, lm.y * img_h)
                         nose_3d = (lm.x*img_w, lm.y * img_h, lm.z * 3000)
+                    
                     
                     x, y = int(lm.x * img_w), int(lm.y * img_h) #landmark value is scaled by image width and height
                     
@@ -71,17 +74,20 @@ while cap.isOpened():
             rotation = Rotation.from_matrix(rmat)
             angles = rotation.as_euler('xyz', degrees=True)
 
+            single_angle = np.linalg.norm(angles)
+
+            single_angle = single_angle * 1000
             x = angles[0] * 360
             y = angles[1] * 360
             z = angles[2] * 360
 
-            if y < -10:
+            if y < -15:
                 text = "Looking left"
-            elif y > 10:
+            elif y > 15:
                 text = "Looking Right"
-            elif x < -10:
+            elif x < -5:
                 text = "Looking Down"
-            elif x > 10:
+            elif x > 15:
                 text = "Looking Up"
             else:
                 text = "Foward"
@@ -95,9 +101,9 @@ while cap.isOpened():
             cv2.line(image, p1, p2, (255, 0 , 0), 3)
 
             cv2.putText(image, text, (20,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
-            cv2.putText(image, "x:" + str(np.round(y,2)), (400,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-            cv2.putText(image, "y:" + str(np.round(x,2)), (400,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-            cv2.putText(image, "z:" + str(np.round(z,2)), (400,150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+            cv2.putText(image, str(np.round(single_angle,2)), (450,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+            #cv2.putText(image, "y:" + str(np.round(x,2)) + "°", (360,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+            #cv2.putText(image, "z:" + str(np.round(z,2)) + "°", (360,150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
         
         end = time.time()
         Totaltime = end-start
